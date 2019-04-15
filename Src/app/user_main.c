@@ -2,6 +2,8 @@
 #include "user_main.h"
 #include "string.h"
 #include "FIFO_Uart.h"
+#include "app.h"
+#include "bleOpt.h"
 
 int revBuffSize = 1024;
 char revBuff[128];
@@ -18,7 +20,8 @@ uint8_t tx_ble_buff[128] = {0};
 static uint8_t bleCh;
 static uint8_t debugCh;
 
-
+extern stuBledeviceInfo stubleDI;
+extern stuBledeviceInfo stuDebugDI;
 int fputc(int ch, FILE *f)
 {
 	HAL_UART_Transmit(&huart1,(uint8_t *)&ch,1,0xff);
@@ -62,6 +65,23 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 			}
 		}
 	}
+	if(huart == &huart2)
+	{
+		//huart1 rev data
+		//printf("%c\r\n",debugCh);
+		inputFifo(bleCh,&usart_ble);
+		if(HAL_UART_Receive_IT(huart,&bleCh,1) != HAL_OK)
+		{
+			if(HAL_UART_Init(huart) != HAL_OK)
+			{
+				printf("error set IT\r\n");
+			}
+			if(HAL_UART_Receive_IT(huart,&debugCh,1) == HAL_ERROR)
+			{
+				HAL_NVIC_SystemReset();
+			}
+		}
+	}
 }
 
 ErrorStatus getDebugData(char *buff,int *len)
@@ -75,6 +95,7 @@ ErrorStatus getDebugData(char *buff,int *len)
 	}	
 	return SUCCESS;
 }
+
 void initFifo(void)
 {
 	FIFO_UartVarInit(&usart_debug,&huart1,tx_debug_buff,rx_debug_buff,200,200,NULL,NULL,NULL);
@@ -88,5 +109,28 @@ void initFifo(void)
 		printf("huart2 init fasle ,reset\r\n");
 	}
 }
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+	static int count = 0;
+	if(count++ == 100)
+	{
+		//printf("dog\r\n");
+		count = 0;
+	}
+	getDebugData(stuDebugDI.buff,&(stuDebugDI.len));
+	if(stuDebugDI.len > 0)
+	{
+		//ansy rev data
+		inputRevDebug();
+	}
+	getBleData(stubleDI.buff,&(stubleDI.len));
+	if(stubleDI.len > 0)
+	{
+		//ansy rev data
+		inputRevBle();
+	}
+}
+
 
 
