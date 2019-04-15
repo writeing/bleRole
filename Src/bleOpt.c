@@ -15,13 +15,13 @@ stuBledeviceInfo stubleDI;
 
 void inputRevBle(void)
 {	
-	static int revDataMode = BLE_MODULE_MODE_CMD;
+	static int revDataMode = BLE_REV_MODE_CMD;
 	if(revDataMode == BLE_REV_MODE_CMD)
 	{
 		if(strstr(stubleDI.buff,"fileName") != NULL)
 		{
 			stubleDI.nowRevCount = 0;
-			sscanf(stubleDI.buff,"fileName:%s;",stubleDI.filename);
+			sscanf(stubleDI.buff,"fileName:%[^;]",stubleDI.filename);
 			printf("fileName = %s\r\n",stubleDI.filename);
 			//send data to pc
 			printf("fileName:%s;",stubleDI.filename);
@@ -30,13 +30,13 @@ void inputRevBle(void)
 		{
 			sscanf(stubleDI.buff,"fileSize:%d;",&(stubleDI.filesize));	
 			printf("fileSize = %d\r\n",stubleDI.filesize);			
-			createBleFifo(_stuBleFifoobj,stubleDI.filesize);
+			createBleFifo(&_stuBleFifoobj,stubleDI.filesize);
 			//send data to pc
 			printf("fileSize:%d;",stubleDI.filesize);
 		}
 		else if(strstr(stubleDI.buff,"fileType"))
 		{
-			sscanf(stubleDI.buff,"fileType:%s;",stubleDI.filetype);	
+			sscanf(stubleDI.buff,"fileType:%[^;]",stubleDI.filetype);	
 			printf("fileType = %s\r\n",stubleDI.filetype);
 			//send data to pc
 			printf("fileType:%s;",stubleDI.filetype);
@@ -51,7 +51,7 @@ void inputRevBle(void)
 		else if(strstr(stubleDI.buff,"fileEncrypt"))
 		{
 			char result[10];
-			sscanf(stubleDI.buff,"fileEncrypt:%s;",result);	
+			sscanf(stubleDI.buff,"fileEncrypt:%[^;]",result);	
 			printf("fileEncrypt = %s\r\n",result);
 			//false //true
 			if(strstr(result,"false")!= NULL)
@@ -71,13 +71,15 @@ void inputRevBle(void)
 			printf("deviceBengin:1;");	
 			revDataMode = DEBUG_REV_MODE_DATA;
 		}
+		memset(stubleDI.buff,0,100);
 	}
+	//rev data to pc
 	if(revDataMode == BLE_REV_MODE_DATA)
 	{
 		//rev data
 		//set a fifo		
 		stubleDI.nowRevCount += stubleDI.len;
-		inputInfo(_stuBleFifoobj,stubleDI.buff,stubleDI.len);
+		inputInfo(&_stuBleFifoobj,stubleDI.buff,stubleDI.len);
 		if(stubleDI.nowRevCount == stubleDI.filesize)
 		{
 			//rev finish

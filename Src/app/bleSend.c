@@ -16,7 +16,7 @@ func info: send stu buff with ble to device
 func parm; stu ble info 
 func return: void
 *************/
-void bleSendHeadInfoDevice(stuBledeviceInfo temp)
+void bleSendHeadInfoDevice(stuBledeviceInfo *temp)
 {
 	//check ble connect
 	
@@ -25,34 +25,34 @@ void bleSendHeadInfoDevice(stuBledeviceInfo temp)
 	int len = 0;
 	
 	memset(buff,0,50);
-	len = sprintf(buff,"fileName:%s;",temp.filename);
+	len = sprintf(buff,"fileName:%s;",temp->filename);
 	sendBuffToBleModule(buff,len);
-	HAL_Delay(100);
+	HAL_Delay(200);
 	
 	memset(buff,0,50);
-	len = sprintf(buff,"fileSize:%d;",temp.filesize);
+	len = sprintf(buff,"fileSize:%d;",temp->filesize);
 	sendBuffToBleModule(buff,len);
-	HAL_Delay(100);
+	HAL_Delay(200);
 	
 	memset(buff,0,50);
-	len = sprintf(buff,"fileType:%s;",temp.filetype);
+	len = sprintf(buff,"fileType:%s;",temp->filetype);
 	sendBuffToBleModule(buff,len);
-	HAL_Delay(100);
+	HAL_Delay(200);
 	
 	memset(buff,0,50);
-	len = sprintf(buff,"fileNum:%d;",temp.localNum);
+	len = sprintf(buff,"fileNum:%d;",temp->localNum);
 	sendBuffToBleModule(buff,len);
-	HAL_Delay(100);
+	HAL_Delay(200);
 	
 	memset(buff,0,50);
-	len = sprintf(buff,"fileEncrypt:%d;",temp.fileEncrypt);
+	len = sprintf(buff,"fileEncrypt:%d;",temp->fileEncrypt);
 	sendBuffToBleModule(buff,len);
-	HAL_Delay(100);
+	HAL_Delay(200);
 	
 	memset(buff,0,50);
-	len = sprintf(buff,"FileObj:%d;",temp._fileaim);
+	len = sprintf(buff,"FileObj:%d;",temp->_fileaim);
 	sendBuffToBleModule(buff,len);
-	HAL_Delay(100);
+	HAL_Delay(200);
 	//foreach send data
 }
 /*************
@@ -61,7 +61,7 @@ func info: send stu buff to pc with serial
 func parm; stu ble info
 func return: void
 *************/
-void serialSendHeadInfoPc(stuBledeviceInfo temp)
+void serialSendHeadInfoPc(stuBledeviceInfo *temp)
 {
 	//combine rev head info 
 	//send rev head info to pc

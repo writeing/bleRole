@@ -22,6 +22,8 @@ static uint8_t debugCh;
 
 extern stuBledeviceInfo stubleDI;
 extern stuBledeviceInfo stuDebugDI;
+
+
 int fputc(int ch, FILE *f)
 {
 	HAL_UART_Transmit(&huart1,(uint8_t *)&ch,1,0xff);
@@ -76,7 +78,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 			{
 				printf("error set IT\r\n");
 			}
-			if(HAL_UART_Receive_IT(huart,&debugCh,1) == HAL_ERROR)
+			if(HAL_UART_Receive_IT(huart,&bleCh,1) == HAL_ERROR)
 			{
 				HAL_NVIC_SystemReset();
 			}
