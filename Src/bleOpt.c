@@ -7,19 +7,20 @@
 #include "FIFO_Uart.h"
 #include "usart.h"
 
-extern UART_FIFO_Typedef_t usart_ble;
-
-
-static stuBleFifo 		_stuBleFifoobj;
+stuBleFifo 		blestuBleFifoobj;
 stuBledeviceInfo stubleDI;
+int revBleDataMode = BLE_REV_MODE_CMD;
+static int isAim = 0;
+static char gs_chbuff[1024] = {0};
+static char gs_chIndex = 0;
 
 void inputRevBle(void)
-{	
-	static int revDataMode = BLE_REV_MODE_CMD;
-	if(revDataMode == BLE_REV_MODE_CMD)
+{
+	if(revBleDataMode == BLE_REV_MODE_CMD)
 	{
 		if(strstr(stubleDI.buff,"fileName") != NULL)
 		{
+
 			stubleDI.nowRevCount = 0;
 			sscanf(stubleDI.buff,"fileName:%[^;]",stubleDI.filename);
 			printf("fileName = %s\r\n",stubleDI.filename);
@@ -30,7 +31,7 @@ void inputRevBle(void)
 		{
 			sscanf(stubleDI.buff,"fileSize:%d;",&(stubleDI.filesize));	
 			printf("fileSize = %d\r\n",stubleDI.filesize);			
-			createBleFifo(&_stuBleFifoobj,stubleDI.filesize);
+			createBleFifo(&blestuBleFifoobj,stubleDI.filesize);
 			//send data to pc
 			printf("fileSize:%d;",stubleDI.filesize);
 		}
@@ -63,63 +64,76 @@ void inputRevBle(void)
 				stubleDI.fileEncrypt = 1;
 			}
 		}
+		else if(strstr(stuDebugDI.buff,"FileObj"))
+		{
+			int num = 0;
+			sscanf(stuDebugDI.buff,"FileObj:%d;",&num);	
+			stuDebugDI._fileaim = num;			
+			//check aim is local
+			if(checkRevData(num) == SUCCESS)
+			{
+				//can rev
+				isAim = 1;
+			}
+			else
+			{
+				//can`t rev
+				isAim = 0;
+			}
+		}
 		else if(strstr(stubleDI.buff,"deviceBegin"))
 		{
-			//sscanf(stubleDI.buff,"fileNum:%d;",&(stubleDI.aimNum));	
-			//printf("fileNum = %d\r\n",stubleDI.aimNum);
 			//send data to pc
 			printf("deviceBengin:1;");	
-			revDataMode = DEBUG_REV_MODE_DATA;
+			if(isAim)
+			{
+				revBleDataMode = BLE_REV_MODE_DATA;
+			}			
 		}
 		memset(stubleDI.buff,0,100);
+		stubleDI.len = 0;
 	}
-	//rev data to pc
-	if(revDataMode == BLE_REV_MODE_DATA)
+	else if(revBleDataMode == BLE_REV_MODE_DATA )
+			
 	{
-		//rev data
-		//set a fifo		
-		stubleDI.nowRevCount += stubleDI.len;
-		inputInfo(&_stuBleFifoobj,stubleDI.buff,stubleDI.len);
-		if(stubleDI.nowRevCount == stubleDI.filesize)
-		{
-			//rev finish
-			revDataMode = DEBUG_REV_MODE_CMD;
-			stubleDI.nowRevCount = 0;
-		}
+//		//copy data to buff
+//		memcpy(gs_chbuff,stubleDI.buff,stubleDI.len);
+//		gs_chIndex = stubleDI.len;
+		
 	}
-	if(revDataMode == BLE_MODULE_MODE_CMD)
+	else if(revBleDataMode == BLE_MODULE_MODE_CMD)
 	{
 		//check at cmd and check connect status
 	}
-}
-
-ErrorStatus getBleData(char *buff,int *len)
-{
-	uint8_t aRxBuffer;
-	*len = 0;
-	while(FIFO_UartReadByte(&usart_ble,&aRxBuffer) == HAL_OK)	
+	else
 	{
-		buff[*len] = aRxBuffer;		
-		(*len) ++;
+		//
 	}
-	return SUCCESS;
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+void checkBleData(void)
+{	
+	if(gs_chIndex > 0 && revBleDataMode == BLE_REV_MODE_DATA)
+	{
+		//printf("time Tick = %d,%d\r\n",HAL_GetTick() - timet,HAL_GetTick());
+		stubleDI.nowRevCount += stubleDI.len;
+		printf("rev %d:%d:%d\r\n",stubleDI.len,stubleDI.nowRevCount,stubleDI.filesize);
+		//send data to pc
+		sendBuffToPc((uint8_t *)stubleDI.buff,stubleDI.len);
+		if(stubleDI.nowRevCount == stubleDI.filesize)
+		{
+			//finish 
+			printf("deviceBengin:3;");
+			revBleDataMode = BLE_REV_MODE_DATA;				
+		}
+		if(stubleDI.nowRevCount > stubleDI.filesize)
+		{
+			printf("revError:3;");
+			revBleDataMode = DEBUG_REV_MODE_CMD;				
+		}
+		stubleDI.len = 0;
+	}
+}
 
 

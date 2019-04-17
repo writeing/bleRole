@@ -91,17 +91,18 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_TIM3_Init();
+  MX_DMA_Init();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-	initFifo();
+  initFifo();
 
   /* USER CODE END 2 */
-
+  
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	HAL_TIM_Base_Start_IT(&htim3);
-	_main();
+  HAL_TIM_Base_Start_IT(&htim3);
+  _main();
   while (1)
   {
 		

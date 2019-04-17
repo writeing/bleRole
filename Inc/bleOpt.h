@@ -8,7 +8,7 @@
 
 extern void 			inputRevBle(void);
 extern ErrorStatus 		getBleData(char *buff,int *len);
-
+extern void 			checkBleData(void);
 
 
 #define BLE_MODULE_MODE_CMD			1
