@@ -16,49 +16,57 @@ func info: send stu buff with ble to device
 func parm; stu ble info 
 func return: void
 *************/
+
 void bleSendHeadInfoDevice(stuBledeviceInfo *temp)
 {
 	//check ble connect
 	
 	//combine stu char *
-	char buff[50] = {0};
+	char buff[100] = {0};
 	int len = 0;
-	sendBuffToBleModule("1323",5);
-	HAL_Delay(200);
-	memset(buff,0,50);
-	len = sprintf(buff,"fileName:%s;",temp->filename);
+	
+	
+	memset(buff,0,100);
+	len = sprintf(buff,"ble:%d;%d;%d;%d;%s;",temp->filesize,temp->localNum,temp->fileEncrypt,temp->_fileaim,temp->filename);
 	sendBuffToBleModule(buff,len);
-	HAL_Delay(400);
+	HAL_Delay(1000);
+	
+
+//	
+//	memset(buff,0,50);
+//	len = sprintf(buff,"fileName:%s;",temp->filename);
+//	sendBuffToBleModule(buff,len);
+//	HAL_Delay(1000);
+//	
+//	memset(buff,0,50);
+//	len = sprintf(buff,"fileSize:%d;",temp->filesize);
+//	sendBuffToBleModule(buff,len);
+//	HAL_Delay(1000);
+//	
+//	memset(buff,0,50);
+//	len = sprintf(buff,"fileType:%s;",temp->filetype);
+//	sendBuffToBleModule(buff,len);
+//	HAL_Delay(1000);
+//	
+//	memset(buff,0,50);
+//	len = sprintf(buff,"fileNum:%d;",temp->localNum);
+//	sendBuffToBleModule(buff,len);
+//	HAL_Delay(1000);
+//	
+//	memset(buff,0,50);
+//	len = sprintf(buff,"fileEncrypt:%d;",temp->fileEncrypt);
+//	sendBuffToBleModule(buff,len);
+//	HAL_Delay(1000);
+//	
+//	memset(buff,0,50);
+//	len = sprintf(buff,"FileObj:%d;",temp->_fileaim);
+//	sendBuffToBleModule(buff,len);
+//	HAL_Delay(1000);
 	
 	memset(buff,0,50);
-	len = sprintf(buff,"fileSize:%d;",temp->filesize);
+	len = sprintf(buff,"1deviceBegin");
 	sendBuffToBleModule(buff,len);
-	HAL_Delay(400);
-	
-	memset(buff,0,50);
-	len = sprintf(buff,"fileType:%s;",temp->filetype);
-	sendBuffToBleModule(buff,len);
-	HAL_Delay(400);
-	
-	memset(buff,0,50);
-	len = sprintf(buff,"fileNum:%d;",temp->localNum);
-	sendBuffToBleModule(buff,len);
-	HAL_Delay(400);
-	
-	memset(buff,0,50);
-	len = sprintf(buff,"fileEncrypt:%d;",temp->fileEncrypt);
-	sendBuffToBleModule(buff,len);
-	HAL_Delay(400);
-	
-	memset(buff,0,50);
-	len = sprintf(buff,"FileObj:%d;",temp->_fileaim);
-	sendBuffToBleModule(buff,len);
-	HAL_Delay(400);
-	
-	memset(buff,0,50);
-	len = sprintf(buff,"deviceBegin");
-	sendBuffToBleModule(buff,len);
-	HAL_Delay(400);
+	HAL_Delay(1000);
 	
 	//foreach send data
 }
@@ -113,7 +121,8 @@ func return: void
 *************/
 void sendBuffToBleModule(char *buff ,int len)
 {
-	HAL_UART_Transmit(&huart2,(uint8_t *)buff,len,0xff);
+	HAL_UART_Transmit(&huart2,(uint8_t *)buff,len,0x10);
+	//HAL_UART_Transmit(&huart1,(uint8_t *)buff,len,0x10);
 }
 
 

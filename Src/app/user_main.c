@@ -11,11 +11,11 @@ char revBuff[128];
 UART_FIFO_Typedef_t usart_debug;
 UART_FIFO_Typedef_t usart_ble;
 
-uint8_t rx_debug_buff[1024] = {0};
-uint8_t tx_debug_buff[1024] = {0};
+//uint8_t rx_debug_buff[1024] = {0};
+//uint8_t tx_debug_buff[1024] = {0};
 
-uint8_t rx_ble_buff[1024] = {0};
-uint8_t tx_ble_buff[1024] = {0};
+//uint8_t rx_ble_buff[1024] = {0};
+//uint8_t tx_ble_buff[1024] = {0};
 
 static uint8_t bleCh;
 static uint8_t debugCh;
@@ -26,6 +26,8 @@ extern stuBledeviceInfo stuDebugDI;
 extern int 				revDataMode;
 extern int 				revBleDataMode;
 extern stuBleFifo 		blestuBleFifoobj;
+
+
 int fputc(int ch, FILE *f)
 {
 	HAL_UART_Transmit(&huart1,(uint8_t *)&ch,1,0xff);
@@ -75,14 +77,15 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 	{
 		//huart1 rev data
 		//printf("%c\r\n",debugCh);		
-		if(revBleDataMode == BLE_REV_MODE_DATA)
-		{
-			inputCharInfo(&blestuBleFifoobj,bleCh);
-		}
-		else
-		{
-			inputFifo(bleCh,&usart_ble);
-		}
+		inputCharInfo(&blestuBleFifoobj,bleCh);
+//		if(revBleDataMode == BLE_REV_MODE_DATA)
+//		{
+//			inputCharInfo(&blestuBleFifoobj,bleCh);
+//		}
+//		else
+//		{
+//			inputFifo(bleCh,&usart_ble);
+//		}
 		HAL_UART_Receive_IT(huart,&bleCh,1);
 	}
 }
@@ -147,10 +150,11 @@ void initFifo(void)
 	
 	//FIFO_UartVarInit(&usart_ble,&huart2,tx_ble_buff,rx_ble_buff,1024,1024,NULL,NULL,NULL);
 	
-	HAL_UART_Receive_DMA(&huart2,(uint8_t *)blestuBleFifoobj.buff, 1024);
-	__HAL_UART_ENABLE_IT(&huart2, UART_IT_IDLE);
+	HAL_UART_Receive_IT(&huart2,(uint8_t *)&bleCh, 1);
+	//__HAL_UART_ENABLE_IT(&huart2, UART_IT_IDLE);
 }
-
+extern char gs_chbuff[1024];
+extern char gs_chIndex;
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 {
 	static int count = 0;
@@ -160,17 +164,22 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		count = 0;
 	}
 	//ErrorStatus rpy = getDebugData(,&(stuDebugDI.len));
-	if(blestuBleFifoobj.revFlag == 1)
+	stubleDI.len = getFifoData(&blestuBleFifoobj,stubleDI.buff);
+	if(stubleDI.len != 0)
 	{
-		blestuBleFifoobj.revFlag = 0;
-		memcpy(stubleDI.buff,blestuBleFifoobj.buff,blestuBleFifoobj.curCount);
-		stubleDI.len = blestuBleFifoobj.curCount;
-		if(stubleDI.len > 0)
-		{
-			//ansy rev data		
-			inputRevBle();
-		}
-	}
+		inputRevBle();
+	}		
+//	if(blestuBleFifoobj.revFlag == 1)
+//	{
+//		blestuBleFifoobj.revFlag = 0;
+//		memcpy(stubleDI.buff,blestuBleFifoobj.buff,blestuBleFifoobj.curCount);
+//		stubleDI.len = blestuBleFifoobj.curCount;
+//		if(stubleDI.len > 0)
+//		{
+//			//ansy rev data		
+//			inputRevBle();
+//		}
+//	}
 	if(_stuBleFifoobj.revFlag == 1)
 	{
 		_stuBleFifoobj.revFlag = 0;
@@ -205,6 +214,8 @@ ErrorStatus checkRevData(int num)
 {
 	int num1 = num/10;
 	int num2 = num%10;
+	//printf("local num = %d\r\n",stuDebugDI.localNum);
+	//printf("aim num = %d,%d\r\n",num1,num2);
 	if(stuDebugDI.localNum == num1 || stuDebugDI.localNum == num2)
 	{
 		return SUCCESS;		

@@ -24,13 +24,13 @@ void inputRevDebug(void)
 		{
 			stuDebugDI.nowRevCount = 0;
 			sscanf(stuDebugDI.buff,"fileName:%[^;]",stuDebugDI.filename);
-			printf("fileName = %s\r\n",stuDebugDI.filename);
+			//printf("fileName = %s\r\n",stuDebugDI.filename);
 			//send data to ble			
 		}
 		else if(strstr(stuDebugDI.buff,"fileSize"))
 		{
 			sscanf(stuDebugDI.buff,"fileSize:%d;",&(stuDebugDI.filesize));	
-			printf("fileSize = %d\r\n",stuDebugDI.filesize);			
+			//printf("fileSize = %d\r\n",stuDebugDI.filesize);			
 			createBleFifo(&_stuBleFifoobj,stuDebugDI.filesize);
 			//send data to ble
 		}
@@ -69,17 +69,20 @@ void inputRevDebug(void)
 			stuDebugDI._fileaim = num;	
 			//cmd rev finish
 			appStatus = 1;
-			revDataMode = DEBUG_REV_MODE_DATA;
+
 		}
+
 		stuDebugDI.len = 0;
 		memset(stuDebugDI.buff,0,100);
 	}
 	else if(revDataMode == DEBUG_REV_MODE_DATA)
 	{
-		//copy data to buff
-		//memcpy(gs_chbuff,stuDebugDI.buff,stuDebugDI.len);
-		//gs_chIndex = stuDebugDI.len;
+		//send data to ble	
 		
+		if(strstr(stuDebugDI.buff,"readall"))
+		{
+			printf("%s,%d,%s,%d,%d,%d\r\n",stuDebugDI.filename,stuDebugDI.filesize,stuDebugDI.filetype,stuDebugDI.fileEncrypt,stuDebugDI._fileaim,stuDebugDI.nowRevCount);
+		}
 	}
 }
 
@@ -89,18 +92,19 @@ void checkDebugData(void)
 	{
 		//printf("time Tick = %d,%d\r\n",HAL_GetTick() - timet,HAL_GetTick());
 		stuDebugDI.nowRevCount += stuDebugDI.len;
-		printf("rev %d:%d:%d\r\n",stuDebugDI.len,stuDebugDI.nowRevCount,stuDebugDI.filesize);
-		//send data to ble			
-		sendBuffToBleModule(stuDebugDI.buff,stuDebugDI.len);
+		//printf("rev %d:%d:%d\r\n",stuDebugDI.len,stuDebugDI.nowRevCount,stuDebugDI.filesize);
+		sendBuffToBleModule(stuDebugDI.buff,stuDebugDI.len);		
 		if(stuDebugDI.nowRevCount == stuDebugDI.filesize)
 		{
 			//finish 
 			printf("deviceBengin:3;");
+			stuDebugDI.nowRevCount = 0;
 			revDataMode = DEBUG_REV_MODE_CMD;				
 		}
 		if(stuDebugDI.nowRevCount > stuDebugDI.filesize)
 		{
 			printf("revError:3;");
+			stuDebugDI.nowRevCount = 0;
 			revDataMode = DEBUG_REV_MODE_CMD;				
 		}
 		stuDebugDI.len = 0;
@@ -108,11 +112,13 @@ void checkDebugData(void)
 }
 
 
+extern stuBleFifo 		blestuBleFifoobj;
 void _main(void)
 {
 
 	//init ble
 	cleanFifo(&_stuBleFifoobj);
+	createBleFifo(&blestuBleFifoobj,1024);
 	while(1)
 	{			
 		checkDebugData();
@@ -122,9 +128,12 @@ void _main(void)
 			//send data to ble
 			bleSendHeadInfoDevice(&stuDebugDI);
 			printf("deviceBengin:2;");				
+			revDataMode = DEBUG_REV_MODE_DATA;
 			//call pc is ok then send data
 			appStatus = 0;
 		}
+//		HAL_Delay(10);
+//		sendBuffToBleModule("0123456789",10);
 	}
 }
 
